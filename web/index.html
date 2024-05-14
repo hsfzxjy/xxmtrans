@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>新新魔塔语翻译器</title>
+    <style>
+      body,
+      html {
+        height: 100%;
+      }
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          "Open Sans",
+          "Helvetica Neue",
+          sans-serif;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 700px;
+        width: 100%;
+        max-width: 600px;
+        padding: 5px;
+      }
+      @media (orientation: portrait) {
+        main {
+          max-height: unset;
+          max-width: unset;
+        }
+      }
+      button {
+        --color: rgb(0, 120, 231);
+        background-color: var(--color);
+        border: none;
+        color: #fff;
+        line-height: normal;
+        white-space: nowrap;
+        vertical-align: middle;
+        text-align: center;
+        cursor: pointer;
+        -webkit-user-drag: none;
+        user-select: none;
+        padding: 0.4em 1.2em;
+      }
+      button:hover {
+        background-color: rgba(0, 120, 231, 80%);
+      }
+      section.title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.1em 0;
+      }
+
+      section.title h1 {
+        font-size: 1em;
+      }
+      textarea {
+        width: 100%;
+        height: 100%;
+        resize: none;
+        border-color: #ccc;
+        transition: all 0.125s;
+        padding: 5px;
+        font-size: 1.2em;
+        outline: transparent;
+      }
+      textarea:focus,
+      textarea:hover {
+        border-color: #000;
+        box-shadow: 0 0 5px #ccc;
+      }
+      textarea:focus + .label,
+      textarea:hover + .label {
+        border-color: #000;
+        box-shadow: 0 0 5px #ccc;
+      }
+      .label {
+        padding: 0.4em 1em;
+        position: absolute;
+        background-color: white;
+        border: #ccc 1px solid;
+        transition: all 0.125s;
+        --before-height: 4px;
+      }
+
+      .label:before {
+        position: absolute;
+        content: "";
+        width: 100%;
+        height: var(--before-height);
+        left: 0;
+        right: 0;
+        background-color: white;
+      }
+
+      #edit-zh + .label {
+        top: 100%;
+        border-top-width: 0;
+        --box-shadow-offset-y: 4px;
+      }
+
+      #edit-zh + .label:before {
+        bottom: 100%;
+      }
+
+      #edit-xxmt + .label {
+        bottom: 100%;
+        right: 0;
+        border-bottom-width: 0;
+        --box-shadow-offset-y: -4px;
+      }
+
+      #edit-xxmt + .label:before {
+        top: 100%;
+      }
+
+      #toolbar {
+        width: 100%;
+        height: 2.5em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #toolbar div {
+        font-size: smaller;
+      }
+
+      .edit-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="title">
+        <h1>新新魔塔语翻译</h1>
+        <button id="example">示例</button>
+      </section>
+      <section class="edit-wrapper">
+        <textarea name="" id="edit-zh"></textarea>
+        <div class="label">人类语</div>
+      </section>
+      <section id="toolbar">
+        <div>点击下方自动复制</div>
+      </section>
+      <section class="edit-wrapper">
+        <textarea name="" id="edit-xxmt" readonly></textarea>
+        <div class="label">新新语</div>
+      </section>
+      <section>
+        <span
+          >作者：<a href="https://github.com/hsfzxjy" target="_blank"
+            >hsfzxjy</a
+          ></span
+        >
+        <span style="float: right"
+          >源码：<a href="https://github.com/hsfzxjy/xxmtrans" target="_blank"
+            >xxmtrans</a
+          ></span
+        >
+      </section>
+    </main>
+    <script src="./pkg/xxmtrans.js"></script>
+    <script>
+      wasm_bindgen().then(() => {
+        function debounce(fn, delay = 200) {
+          let timer = null
+          return function () {
+            if (timer) {
+              clearTimeout(timer)
+            }
+            timer = setTimeout(() => {
+              fn.apply(this, arguments)
+            }, delay)
+          }
+        }
+
+        const $editZh = document.getElementById("edit-zh")
+        const $editXxmt = document.getElementById("edit-xxmt")
+        const $example = document.getElementById("example")
+
+        const onZhChange = debounce(() => {
+          const zh = $editZh.value
+          const xxmt = wasm_bindgen.to_xxmt(zh)
+          $editXxmt.value = xxmt
+        })
+        $editZh.addEventListener("input", onZhChange)
+
+        $example.addEventListener("click", () => {
+          $editZh.value = "暗黑魔法师"
+          onZhChange()
+        })
+
+        $editXxmt.addEventListener("click", () => {
+          $editXxmt.select()
+          document.execCommand("copy")
+        })
+      })
+    </script>
+  </body>
+</html>

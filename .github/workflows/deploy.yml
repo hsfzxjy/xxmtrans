@@ -1,0 +1,65 @@
+name: Deploy Site
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache build tools and artifacts
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo
+            target
+            ~/binaryen-version_117/
+          key: ${{ runner.os }}-cargo
+
+      - name: Install wasm-opt
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          cd ~
+          wget https://github.com/WebAssembly/binaryen/releases/download/version_117/binaryen-version_117-x86_64-linux.tar.gz
+          tar -xvf binaryen-version_117-x86_64-linux.tar.gz
+
+      - name: Install wasm build tools
+        run: |
+          cargo install wasm-pack
+          cargo install wasm-bindgen-cli
+
+      - name: Build the site
+        run: |
+          export PATH=$PATH:$HOME/binaryen-version_117/bin
+          make release
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
